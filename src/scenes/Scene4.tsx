@@ -1,85 +1,113 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Img, staticFile } from 'remotion';
-import React from 'react';
+
+const COLORS = {
+  primary: '#0052D9',
+  accent: '#0066FF',
+  accentLight: '#85A5FF',
+  background: '#0D1117',
+  text: '#FFFFFF',
+  textSecondary: '#8B949E',
+};
 
 export const Scene4: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // 对话框弹性缩放进入
-  const dialogScale = spring({
+  // 界面从下方滑入
+  const interfaceY = interpolate(
+    frame,
+    [0, 40],
+    [100, 0],
+    { extrapolateRight: 'clamp' }
+  );
+
+  const interfaceOpacity = interpolate(
+    frame,
+    [0, 30],
+    [0, 1],
+    { extrapolateRight: 'clamp' }
+  );
+
+  // 界面缩放
+  const interfaceScale = spring({
     fps,
-    frame: frame - 10,
+    frame,
     config: {
-      damping: 150,
+      damping: 30,
       stiffness: 100,
     },
   });
 
-  const dialogOpacity = interpolate(frame, [10, 30], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
+  // 高亮框动画
+  const highlightFrame1 = 80;
+  const highlight1Opacity = interpolate(
+    frame,
+    [highlightFrame1, highlightFrame1 + 20],
+    [0, 1],
+    { extrapolateRight: 'clamp' }
+  );
 
-  // 标题淡入
-  const titleOpacity = interpolate(frame, [0, 25], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
+  const highlightFrame2 = 180;
+  const highlight2Opacity = interpolate(
+    frame,
+    [highlightFrame2, highlightFrame2 + 20],
+    [0, 1],
+    { extrapolateRight: 'clamp' }
+  );
 
-  // 气泡提示依次显示
-  const bubble1Opacity = interpolate(frame, [50, 75], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const bubble1Y = interpolate(frame, [50, 75], [20, 0], {
-    extrapolateRight: 'clamp',
-  });
+  // 标注动画
+  const calloutFrame = 100;
+  const callout1Opacity = interpolate(
+    frame,
+    [calloutFrame, calloutFrame + 20],
+    [0, 1],
+    { extrapolateRight: 'clamp' }
+  );
 
-  const bubble2Opacity = interpolate(frame, [80, 105], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const bubble2Y = interpolate(frame, [80, 105], [20, 0], {
-    extrapolateRight: 'clamp',
-  });
+  const callout1Y = interpolate(
+    frame,
+    [calloutFrame, calloutFrame + 20],
+    [20, 0],
+    { extrapolateRight: 'clamp' }
+  );
 
-  const bubble3Opacity = interpolate(frame, [110, 135], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const bubble3Y = interpolate(frame, [110, 135], [20, 0], {
-    extrapolateRight: 'clamp',
-  });
+  const calloutFrame2 = 200;
+  const callout2Opacity = interpolate(
+    frame,
+    [calloutFrame2, calloutFrame2 + 20],
+    [0, 1],
+    { extrapolateRight: 'clamp' }
+  );
 
-  // 表单字段高亮
-  const fieldHighlight1 = interpolate(frame, [150, 170, 190, 210], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  const callout2Y = interpolate(
+    frame,
+    [calloutFrame2, calloutFrame2 + 20],
+    [20, 0],
+    { extrapolateRight: 'clamp' }
+  );
 
-  const fieldHighlight2 = interpolate(frame, [200, 220, 240, 260], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  // 脉冲效果
+  const pulse = Math.sin((frame / 15) * Math.PI);
+  const pulseScale = 1 + Math.max(0, pulse) * 0.05;
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: '#e5e7eb',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 60,
+        background: `linear-gradient(135deg, ${COLORS.background} 0%, #0a1628 100%)`,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
-      {/* 背景装饰 - 网格 */}
+      {/* 背景网格 */}
       <div
         style={{
           position: 'absolute',
-          width: '100%',
-          height: '100%',
-          opacity: 0.1,
+          inset: 0,
           backgroundImage: `
-            linear-gradient(#0083b0 1px, transparent 1px),
-            linear-gradient(90deg, #0083b0 1px, transparent 1px)
+            linear-gradient(0deg, rgba(0, 82, 217, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 82, 217, 0.05) 1px, transparent 1px)
           `,
-          backgroundSize: '50px 50px',
+          backgroundSize: '40px 40px',
+          opacity: 0.4,
         }}
       />
 
@@ -90,176 +118,226 @@ export const Scene4: React.FC = () => {
           top: 80,
           left: 0,
           right: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          zIndex: 10,
+          textAlign: 'center',
+          opacity: interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
-        <h2
+        <div
           style={{
-            fontSize: 56,
+            fontSize: 72,
             fontWeight: 'bold',
-            color: '#1a1a2e',
-            margin: 0,
-            opacity: titleOpacity,
-            textShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
           }}
         >
-          灵活的接入规则配置
-        </h2>
+          站点列表管理
+        </div>
       </div>
 
-      {/* 对话框截图 */}
+      {/* 界面截图容器 */}
       <div
         style={{
-          position: 'relative',
-          width: 1000,
-          transform: `scale(${dialogScale})`,
-          opacity: dialogOpacity,
-          boxShadow: '0 24px 80px rgba(0, 0, 0, 0.3)',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: `translate(-50%, calc(-50% + ${interfaceY}px)) scale(${Math.min(1, interfaceScale * 0.9)})`,
+          opacity: interfaceOpacity,
+          width: 1600,
+          height: 900,
           borderRadius: 16,
           overflow: 'hidden',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          border: `2px solid ${COLORS.accent}`,
         }}
       >
+        {/* 界面截图 */}
         <Img
-          src={staticFile('image-7.png')}
+          src={staticFile('image-4.png')}
           style={{
             width: '100%',
-            height: 'auto',
-            display: 'block',
+            height: '100%',
+            objectFit: 'cover',
           }}
         />
 
-        {/* 字段高亮1 - 规则类型 */}
+        {/* 高亮框1 - 站点列表区域 */}
         <div
           style={{
             position: 'absolute',
-            top: '28%',
-            left: '8%',
-            width: '84%',
+            top: '18%',
+            left: '15%',
+            width: '70%',
             height: '12%',
-            border: '3px solid #0083b0',
+            border: `4px solid ${COLORS.accent}`,
             borderRadius: 8,
-            opacity: fieldHighlight1,
-            boxShadow: '0 0 30px rgba(0, 131, 176, 0.8)',
-            backgroundColor: 'rgba(0, 131, 176, 0.1)',
+            opacity: highlight1Opacity,
+            boxShadow: `0 0 30px ${COLORS.accent}, inset 0 0 30px ${COLORS.accent}44`,
+            transform: `scale(${pulseScale})`,
+            pointerEvents: 'none',
           }}
         />
 
-        {/* 字段高亮2 - 应用场景 */}
+        {/* 高亮框2 - 服务信息列 */}
         <div
           style={{
             position: 'absolute',
-            top: '60%',
-            left: '8%',
-            width: '84%',
-            height: '8%',
-            border: '3px solid #4ade80',
+            top: '18%',
+            right: '8%',
+            width: '20%',
+            height: '60%',
+            border: `4px solid ${COLORS.accentLight}`,
             borderRadius: 8,
-            opacity: fieldHighlight2,
-            boxShadow: '0 0 30px rgba(74, 222, 128, 0.8)',
-            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+            opacity: highlight2Opacity,
+            boxShadow: `0 0 30px ${COLORS.accentLight}, inset 0 0 30px ${COLORS.accentLight}44`,
+            pointerEvents: 'none',
           }}
         />
       </div>
 
-      {/* 功能说明气泡 */}
+      {/* 标注1 - 站点信息 */}
       <div
         style={{
           position: 'absolute',
-          right: 120,
-          top: '30%',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 30,
+          top: '35%',
+          left: '8%',
+          opacity: callout1Opacity,
+          transform: `translateY(${callout1Y}px)`,
         }}
       >
-        {/* 气泡 1 */}
         <div
           style={{
-            backgroundColor: 'rgba(0, 131, 176, 0.95)',
-            padding: '20px 32px',
+            background: `linear-gradient(135deg, ${COLORS.accent}ee 0%, ${COLORS.accent}dd 100%)`,
+            padding: '20px 30px',
             borderRadius: 16,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-            opacity: bubble1Opacity,
-            transform: `translateY(${bubble1Y}px)`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
+            boxShadow: `0 8px 32px ${COLORS.accent}88`,
+            maxWidth: 400,
           }}
         >
-          <span style={{ fontSize: 28, color: '#ffffff' }}>→</span>
-          <span style={{ fontSize: 26, color: '#ffffff', fontWeight: 500 }}>
-            按 IP 地址/网段分配
-          </span>
+          <div
+            style={{
+              fontSize: 36,
+              fontWeight: 'bold',
+              color: COLORS.text,
+              marginBottom: 10,
+            }}
+          >
+            📍 多站点管理
+          </div>
+          <div
+            style={{
+              fontSize: 28,
+              color: '#FFFFFF',
+              opacity: 0.9,
+              lineHeight: 1.5,
+            }}
+          >
+            为每个地区创建专属站点
+            <br />
+            统一管理，一目了然
+          </div>
         </div>
 
-        {/* 气泡 2 */}
-        <div
+        {/* 指示线 */}
+        <svg
+          width="200"
+          height="100"
           style={{
-            backgroundColor: 'rgba(0, 131, 176, 0.95)',
-            padding: '20px 32px',
-            borderRadius: 16,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-            opacity: bubble2Opacity,
-            transform: `translateY(${bubble2Y}px)`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
+            position: 'absolute',
+            top: '50%',
+            left: '100%',
+            transform: 'translateY(-50%)',
           }}
         >
-          <span style={{ fontSize: 28, color: '#ffffff' }}>→</span>
-          <span style={{ fontSize: 26, color: '#ffffff', fontWeight: 500 }}>
-            按部门智能路由
-          </span>
-        </div>
-
-        {/* 气泡 3 */}
-        <div
-          style={{
-            backgroundColor: 'rgba(0, 131, 176, 0.95)',
-            padding: '20px 32px',
-            borderRadius: 16,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-            opacity: bubble3Opacity,
-            transform: `translateY(${bubble3Y}px)`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
-        >
-          <span style={{ fontSize: 28, color: '#ffffff' }}>→</span>
-          <span style={{ fontSize: 26, color: '#ffffff', fontWeight: 500 }}>
-            按会议室专享资源
-          </span>
-        </div>
+          <path
+            d="M 0 50 Q 100 50 200 20"
+            stroke={COLORS.accent}
+            strokeWidth="3"
+            fill="none"
+            strokeDasharray="5 5"
+            opacity={0.8}
+          />
+          <circle cx="200" cy="20" r="8" fill={COLORS.accent} />
+        </svg>
       </div>
 
-      {/* 底部提示文字 */}
+      {/* 标注2 - 备份站点 */}
       <div
         style={{
           position: 'absolute',
-          bottom: 80,
+          top: '35%',
+          right: '5%',
+          opacity: callout2Opacity,
+          transform: `translateY(${callout2Y}px)`,
+        }}
+      >
+        <div
+          style={{
+            background: `linear-gradient(135deg, ${COLORS.accentLight}ee 0%, ${COLORS.accentLight}dd 100%)`,
+            padding: '20px 30px',
+            borderRadius: 16,
+            boxShadow: `0 8px 32px ${COLORS.accentLight}88`,
+            maxWidth: 420,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 36,
+              fontWeight: 'bold',
+              color: COLORS.text,
+              marginBottom: 10,
+            }}
+          >
+            🛡️ 自动备份容错
+          </div>
+          <div
+            style={{
+              fontSize: 28,
+              color: '#FFFFFF',
+              opacity: 0.9,
+              lineHeight: 1.5,
+            }}
+          >
+            主站点故障？备份站点
+            <br />
+            自动接管，会议不中断
+          </div>
+        </div>
+      </div>
+
+      {/* 底部文案 */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 100,
           left: 0,
           right: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          opacity: interpolate(frame, [280, 310], [0, 1], { extrapolateRight: 'clamp' }),
+          textAlign: 'center',
+          opacity: interpolate(frame, [300, 330], [0, 1], { extrapolateRight: 'clamp' }),
         }}
       >
         <div
           style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            padding: '16px 40px',
-            borderRadius: 12,
-            fontSize: 22,
-            color: '#4b5563',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            fontSize: 52,
+            fontWeight: 'bold',
+            color: COLORS.text,
+            textShadow: '0 4px 20px rgba(0, 0, 0, 0.7)',
           }}
         >
-          支持会议室、IP地址、部门多维度规则配置
+          绑定呼叫、录制、点播服务，资源灵活分配
         </div>
       </div>
+
+      {/* 淡出效果 */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: COLORS.background,
+          opacity: interpolate(frame, [420, 450], [0, 0.3], { extrapolateRight: 'clamp' }),
+        }}
+      />
     </AbsoluteFill>
   );
 };

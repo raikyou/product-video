@@ -1,212 +1,329 @@
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
-import React from 'react';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion';
+
+const COLORS = {
+  primary: '#0052D9',
+  accent: '#0066FF',
+  accentLight: '#85A5FF',
+  background: '#0D1117',
+  success: '#00C853',
+  text: '#FFFFFF',
+};
 
 export const Scene3: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
 
-  // 界面从左侧滑入
-  const slideX = interpolate(frame, [0, 35], [-400, 0], {
-    extrapolateRight: 'clamp',
-  });
-
-  const imageOpacity = interpolate(frame, [0, 35], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-
-  // 标题淡入
-  const titleOpacity = interpolate(frame, [25, 50], [0, 1], {
-    extrapolateRight: 'clamp',
+  // 标题弹性进入
+  const titleScale = spring({
+    fps,
+    frame,
+    config: {
+      damping: 20,
+      stiffness: 100,
+    },
   });
 
-  // 说明文字逐行显示
-  const desc1Opacity = interpolate(frame, [60, 85], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const desc2Opacity = interpolate(frame, [90, 115], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const desc3Opacity = interpolate(frame, [120, 145], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
+  const titleOpacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
 
-  // 高亮框动画
-  const highlight1Opacity = interpolate(frame, [160, 180], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const highlight2Opacity = interpolate(frame, [200, 220], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
-  const highlight3Opacity = interpolate(frame, [240, 260], [0, 1], {
-    extrapolateRight: 'clamp',
-  });
+  // 地图过渡动画
+  const mapScale = interpolate(frame, [30, 60], [1.5, 1], { extrapolateRight: 'clamp' });
+  const mapOpacity = interpolate(frame, [30, 50], [0, 0.4], { extrapolateRight: 'clamp' });
+
+  // 节点动画
+  const nodes = [
+    { id: 'beijing', x: 54, y: 28, label: '北京', delay: 0 },
+    { id: 'shanghai', x: 65, y: 45, label: '上海', delay: 5 },
+    { id: 'guangzhou', x: 55, y: 75, label: '广州', delay: 10 },
+    { id: 'chengdu', x: 35, y: 65, label: '成都', delay: 15 },
+    { id: 'wuhan', x: 50, y: 55, label: '武汉', delay: 20 },
+  ];
+
+  // 粒子效果
+  const particles = Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    x: (Math.random() * 100),
+    y: (Math.random() * 100),
+    speed: Math.random() * 2 + 0.5,
+    size: Math.random() * 3 + 2,
+  }));
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: '#f5f7fa',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 60,
+        background: `linear-gradient(135deg, ${COLORS.background} 0%, #0a1628 100%)`,
+        fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
-      {/* 标题区域 */}
+      {/* 动态背景网格 */}
       <div
         style={{
           position: 'absolute',
-          top: 80,
-          left: 0,
-          right: 0,
+          inset: 0,
+          backgroundImage: `
+            linear-gradient(0deg, rgba(0, 82, 217, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 82, 217, 0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          backgroundPosition: `${interpolate(frame, [0, 150], [0, 50])}px ${interpolate(frame, [0, 150], [0, 50])}px`,
+          opacity: 0.5,
+        }}
+      />
+
+      {/* 光效粒子 */}
+      {particles.map((particle) => {
+        const particleY = interpolate(
+          frame,
+          [0, 150],
+          [particle.y, particle.y - 30 * particle.speed],
+          { extrapolateRight: 'extend' }
+        );
+
+        const particleOpacity = interpolate(
+          frame,
+          [60, 90],
+          [0, 0.6],
+          { extrapolateRight: 'clamp' }
+        );
+
+        return (
+          <div
+            key={particle.id}
+            style={{
+              position: 'absolute',
+              left: `${particle.x}%`,
+              top: `${particleY % 100}%`,
+              width: particle.size,
+              height: particle.size,
+              borderRadius: '50%',
+              background: COLORS.success,
+              boxShadow: `0 0 10px ${COLORS.success}`,
+              opacity: particleOpacity,
+            }}
+          />
+        );
+      })}
+
+      {/* 中国地图 - 从红色到绿色 */}
+      <div
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          zIndex: 10,
+          justifyContent: 'center',
+          opacity: mapOpacity,
+          transform: `scale(${mapScale})`,
         }}
       >
-        <h2
+        <img
+          src="/china.svg"
+          alt="China Map"
           style={{
-            fontSize: 56,
-            fontWeight: 'bold',
-            color: '#1a1a2e',
-            margin: 0,
-            opacity: titleOpacity,
-            textShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            width: '70%',
+            height: '70%',
+            objectFit: 'contain',
+            filter: `hue-rotate(${interpolate(frame, [30, 80], [0, 120], { extrapolateRight: 'clamp' })}deg)`,
           }}
-        >
-          全面的站点管理
-        </h2>
+        />
+      </div>
 
-        {/* 说明文字 */}
+      {/* 服务器节点 */}
+      <svg width={width} height={height} style={{ position: 'absolute' }}>
+        <defs>
+          <filter id="glow-green">
+            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+            <feMerge>
+              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {nodes.map((node, index) => {
+          const nodeStartFrame = 70 + node.delay;
+          const nodeScale = spring({
+            fps,
+            frame: Math.max(0, frame - nodeStartFrame),
+            config: {
+              damping: 15,
+              stiffness: 150,
+            },
+          });
+
+          const nodeOpacity = interpolate(
+            frame,
+            [nodeStartFrame, nodeStartFrame + 10],
+            [0, 1],
+            { extrapolateRight: 'clamp' }
+          );
+
+          // 脉冲效果
+          const pulse = Math.sin(((frame - nodeStartFrame) / 10) * Math.PI);
+          const pulseScale = 1 + Math.max(0, pulse) * 0.3;
+
+          return (
+            <g key={node.id} opacity={nodeOpacity}>
+              {/* 外圈脉冲 */}
+              <circle
+                cx={(node.x / 100) * width}
+                cy={(node.y / 100) * height}
+                r={25 * pulseScale * Math.min(1, nodeScale)}
+                fill={COLORS.success}
+                opacity={0.3}
+                filter="url(#glow-green)"
+              />
+              {/* 主节点 */}
+              <circle
+                cx={(node.x / 100) * width}
+                cy={(node.y / 100) * height}
+                r={15 * Math.min(1, nodeScale)}
+                fill={COLORS.success}
+                filter="url(#glow-green)"
+              />
+              {/* 内圈 */}
+              <circle
+                cx={(node.x / 100) * width}
+                cy={(node.y / 100) * height}
+                r={8 * Math.min(1, nodeScale)}
+                fill="#FFFFFF"
+              />
+            </g>
+          );
+        })}
+
+        {/* 节点之间的连接线 */}
+        {nodes.slice(1).map((node, index) => {
+          const lineStartFrame = 100 + index * 5;
+          const lineOpacity = interpolate(
+            frame,
+            [lineStartFrame, lineStartFrame + 15],
+            [0, 0.5],
+            { extrapolateRight: 'clamp' }
+          );
+
+          return (
+            <line
+              key={`line-${node.id}`}
+              x1={(nodes[0].x / 100) * width}
+              y1={(nodes[0].y / 100) * height}
+              x2={(node.x / 100) * width}
+              y2={(node.y / 100) * height}
+              stroke={COLORS.accentLight}
+              strokeWidth="2"
+              strokeDasharray="5 5"
+              opacity={lineOpacity}
+            />
+          );
+        })}
+      </svg>
+
+      {/* 节点标签 */}
+      {nodes.map((node) => {
+        const labelStartFrame = 70 + node.delay + 10;
+        const labelOpacity = interpolate(
+          frame,
+          [labelStartFrame, labelStartFrame + 10],
+          [0, 1],
+          { extrapolateRight: 'clamp' }
+        );
+
+        return (
+          <div
+            key={`label-${node.id}`}
+            style={{
+              position: 'absolute',
+              left: `${node.x}%`,
+              top: `${node.y}%`,
+              transform: 'translate(-50%, calc(-100% - 50px))',
+              background: `linear-gradient(135deg, ${COLORS.success}dd 0%, ${COLORS.success}aa 100%)`,
+              color: COLORS.text,
+              padding: '10px 20px',
+              borderRadius: '12px',
+              fontSize: 28,
+              fontWeight: 'bold',
+              opacity: labelOpacity,
+              boxShadow: `0 4px 16px ${COLORS.success}88`,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {node.label}站点
+          </div>
+        );
+      })}
+
+      {/* 主标题 */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          transform: `scale(${Math.min(1, titleScale)})`,
+          opacity: titleOpacity,
+        }}
+      >
         <div
           style={{
-            marginTop: 40,
-            display: 'flex',
-            gap: 50,
-            justifyContent: 'center',
+            fontSize: 96,
+            fontWeight: 'bold',
+            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: 'drop-shadow(0 4px 20px rgba(0, 82, 217, 0.6))',
           }}
         >
-          <div
-            style={{
-              fontSize: 24,
-              color: '#4b5563',
-              opacity: desc1Opacity,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ color: '#0083b0', marginRight: 8, fontSize: 20 }}>●</span>
-            查看所有站点状态
-          </div>
-          <div
-            style={{
-              fontSize: 24,
-              color: '#4b5563',
-              opacity: desc2Opacity,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ color: '#0083b0', marginRight: 8, fontSize: 20 }}>●</span>
-            筛选区域、网络配置
-          </div>
-          <div
-            style={{
-              fontSize: 24,
-              color: '#4b5563',
-              opacity: desc3Opacity,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ color: '#0083b0', marginRight: 8, fontSize: 20 }}>●</span>
-            管理呼叫、录制、点播服务
-          </div>
+          站点管理
         </div>
       </div>
 
-      {/* 界面截图 */}
-      <div
-        style={{
-          position: 'relative',
-          width: 1600,
-          marginTop: 220,
-          transform: `translateX(${slideX}px)`,
-          opacity: imageOpacity,
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
-          borderRadius: 12,
-          overflow: 'hidden',
-        }}
-      >
-        <Img
-          src={staticFile('image-4.png')}
-          style={{
-            width: '100%',
-            height: 'auto',
-            display: 'block',
-          }}
-        />
-
-        {/* 高亮框 1 - 站点名称列 */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '22%',
-            left: '16%',
-            width: '18%',
-            height: '58%',
-            border: '3px solid #0083b0',
-            borderRadius: 8,
-            opacity: highlight1Opacity,
-            boxShadow: '0 0 20px rgba(0, 131, 176, 0.5)',
-          }}
-        />
-
-        {/* 高亮框 2 - 服务列 */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '22%',
-            left: '56%',
-            width: '20%',
-            height: '58%',
-            border: '3px solid #4ade80',
-            borderRadius: 8,
-            opacity: highlight2Opacity,
-            boxShadow: '0 0 20px rgba(74, 222, 128, 0.5)',
-          }}
-        />
-
-        {/* 高亮框 3 - 操作按钮 */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '22%',
-            right: '5%',
-            width: '12%',
-            height: '58%',
-            border: '3px solid #fbbf24',
-            borderRadius: 8,
-            opacity: highlight3Opacity,
-            boxShadow: '0 0 20px rgba(251, 191, 36, 0.5)',
-          }}
-        />
-      </div>
-
-      {/* 底部装饰线 */}
+      {/* 副标题 */}
       <div
         style={{
           position: 'absolute',
-          bottom: 40,
-          left: '10%',
-          right: '10%',
-          height: 4,
-          background: 'linear-gradient(90deg, #0083b0 0%, #00b4db 50%, #0083b0 100%)',
-          borderRadius: 2,
-          opacity: interpolate(frame, [280, 300], [0, 0.3], { extrapolateRight: 'clamp' }),
+          top: '30%',
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          opacity: interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' }),
+          transform: `translateY(${interpolate(frame, [20, 40], [30, 0], { extrapolateRight: 'clamp' })}px)`,
         }}
-      />
+      >
+        <div
+          style={{
+            fontSize: 52,
+            color: COLORS.accentLight,
+            textShadow: `0 0 20px ${COLORS.accent}`,
+          }}
+        >
+          分布式架构 · 智能就近接入
+        </div>
+      </div>
+
+      {/* 底部文案 */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 150,
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          opacity: interpolate(frame, [110, 130], [0, 1], { extrapolateRight: 'clamp' }),
+        }}
+      >
+        <div
+          style={{
+            fontSize: 56,
+            fontWeight: 'bold',
+            color: COLORS.text,
+            textShadow: '0 4px 20px rgba(0, 0, 0, 0.7)',
+          }}
+        >
+          每个地区都有本地服务器
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
