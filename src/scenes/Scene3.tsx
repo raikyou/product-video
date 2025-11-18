@@ -1,201 +1,212 @@
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
 import React from 'react';
-import {
-  AbsoluteFill,
-  useCurrentFrame,
-  useVideoConfig,
-  interpolate,
-  spring,
-} from 'remotion';
-import { loadFont } from '@remotion/google-fonts/NotoSansSC';
-import { FaServer } from 'react-icons/fa';
-
-const { fontFamily } = loadFont();
-
-const NetworkTopology: React.FC<{ frame: number }> = ({ frame }) => {
-  const nodes = [
-    { x: 960, y: 300, label: '总部' },
-    { x: 600, y: 600, label: '上海' },
-    { x: 1320, y: 600, label: '广州' },
-    { x: 400, y: 800, label: '成都' },
-    { x: 1520, y: 800, label: '深圳' },
-  ];
-
-  return (
-    <div style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.3 }}>
-      <svg width="1920" height="1080" style={{ position: 'absolute' }}>
-        {/* Connection lines */}
-        {nodes.slice(1).map((node, i) => {
-          const progress = interpolate(
-            frame,
-            [i * 10, i * 10 + 40],
-            [0, 1],
-            { extrapolateRight: 'clamp' }
-          );
-
-          const pathLength = Math.sqrt(
-            Math.pow(nodes[0].x - node.x, 2) + Math.pow(nodes[0].y - node.y, 2)
-          );
-
-          return (
-            <line
-              key={i}
-              x1={nodes[0].x}
-              y1={nodes[0].y}
-              x2={node.x}
-              y2={node.y}
-              stroke="#00C853"
-              strokeWidth="2"
-              strokeDasharray="10,5"
-              strokeDashoffset={pathLength - pathLength * progress}
-              opacity={0.6}
-            />
-          );
-        })}
-      </svg>
-
-      {/* Nodes */}
-      {nodes.map((node, i) => {
-        const scale = spring({
-          frame: frame - i * 15,
-          fps: 30,
-          config: { damping: 100 },
-        });
-
-        return (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              left: node.x,
-              top: node.y,
-              transform: `translate(-50%, -50%) scale(${scale})`,
-              opacity: scale,
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: '#1e3c72',
-                padding: 15,
-                borderRadius: '50%',
-                border: '2px solid #00C853',
-              }}
-            >
-              <FaServer size={30} color="#00C853" />
-            </div>
-            <div
-              style={{
-                fontSize: 16,
-                color: '#fff',
-                textAlign: 'center',
-                marginTop: 10,
-              }}
-            >
-              {node.label}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 export const Scene3: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Light burst effect
-  const lightRadius = spring({
-    frame,
-    fps,
-    config: {
-      damping: 60,
-      stiffness: 100,
-    },
-  });
-
-  const lightOpacity = interpolate(frame, [0, 60], [0, 0.1], {
+  // 界面从左侧滑入
+  const slideX = interpolate(frame, [0, 35], [-400, 0], {
     extrapolateRight: 'clamp',
   });
 
-  // Title scale and fade in
-  const titleScale = spring({
-    frame: frame - 30,
-    fps,
-    config: {
-      damping: 100,
-      stiffness: 150,
-    },
-  });
-
-  const titleOpacity = interpolate(frame, [30, 90], [0, 1], {
-    extrapolateLeft: 'clamp',
+  const imageOpacity = interpolate(frame, [0, 35], [0, 1], {
     extrapolateRight: 'clamp',
   });
 
-  // Subtitle fade in
-  const subtitleOpacity = interpolate(frame, [90, 120], [0, 1], {
-    extrapolateLeft: 'clamp',
+  // 标题淡入
+  const titleOpacity = interpolate(frame, [25, 50], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+
+  // 说明文字逐行显示
+  const desc1Opacity = interpolate(frame, [60, 85], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+  const desc2Opacity = interpolate(frame, [90, 115], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+  const desc3Opacity = interpolate(frame, [120, 145], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+
+  // 高亮框动画
+  const highlight1Opacity = interpolate(frame, [160, 180], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+  const highlight2Opacity = interpolate(frame, [200, 220], [0, 1], {
+    extrapolateRight: 'clamp',
+  });
+  const highlight3Opacity = interpolate(frame, [240, 260], [0, 1], {
     extrapolateRight: 'clamp',
   });
 
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(circle at center, rgba(255,255,255,${lightOpacity}) 0%, #0F1419 50%)`,
-        fontFamily,
+        backgroundColor: '#f5f7fa',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 60,
       }}
     >
-      {/* Light burst effect */}
+      {/* 标题区域 */}
       <div
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: lightRadius * 800,
-          height: lightRadius * 800,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
-          filter: 'blur(40px)',
-        }}
-      />
-
-      {/* Background network topology */}
-      <NetworkTopology frame={Math.max(0, frame - 60)} />
-
-      {/* Main content */}
-      <AbsoluteFill
-        style={{
+          top: 80,
+          left: 0,
+          right: 0,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
           alignItems: 'center',
-          gap: 20,
+          zIndex: 10,
         }}
       >
-        <h1
+        <h2
           style={{
-            fontSize: 96,
+            fontSize: 56,
             fontWeight: 'bold',
-            color: '#fff',
-            transform: `scale(${titleScale})`,
+            color: '#1a1a2e',
+            margin: 0,
             opacity: titleOpacity,
-            textAlign: 'center',
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           }}
         >
-          站点管理系统
-        </h1>
-        <p
+          全面的站点管理
+        </h2>
+
+        {/* 说明文字 */}
+        <div
           style={{
-            fontSize: 36,
-            color: '#A0A0A0',
-            opacity: subtitleOpacity,
-            textAlign: 'center',
+            marginTop: 40,
+            display: 'flex',
+            gap: 50,
+            justifyContent: 'center',
           }}
         >
-          让每个地区都有自己的资源
-        </p>
-      </AbsoluteFill>
+          <div
+            style={{
+              fontSize: 24,
+              color: '#4b5563',
+              opacity: desc1Opacity,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#0083b0', marginRight: 8, fontSize: 20 }}>●</span>
+            查看所有站点状态
+          </div>
+          <div
+            style={{
+              fontSize: 24,
+              color: '#4b5563',
+              opacity: desc2Opacity,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#0083b0', marginRight: 8, fontSize: 20 }}>●</span>
+            筛选区域、网络配置
+          </div>
+          <div
+            style={{
+              fontSize: 24,
+              color: '#4b5563',
+              opacity: desc3Opacity,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: '#0083b0', marginRight: 8, fontSize: 20 }}>●</span>
+            管理呼叫、录制、点播服务
+          </div>
+        </div>
+      </div>
+
+      {/* 界面截图 */}
+      <div
+        style={{
+          position: 'relative',
+          width: 1600,
+          marginTop: 220,
+          transform: `translateX(${slideX}px)`,
+          opacity: imageOpacity,
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+          borderRadius: 12,
+          overflow: 'hidden',
+        }}
+      >
+        <Img
+          src={staticFile('image-4.png')}
+          style={{
+            width: '100%',
+            height: 'auto',
+            display: 'block',
+          }}
+        />
+
+        {/* 高亮框 1 - 站点名称列 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '22%',
+            left: '16%',
+            width: '18%',
+            height: '58%',
+            border: '3px solid #0083b0',
+            borderRadius: 8,
+            opacity: highlight1Opacity,
+            boxShadow: '0 0 20px rgba(0, 131, 176, 0.5)',
+          }}
+        />
+
+        {/* 高亮框 2 - 服务列 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '22%',
+            left: '56%',
+            width: '20%',
+            height: '58%',
+            border: '3px solid #4ade80',
+            borderRadius: 8,
+            opacity: highlight2Opacity,
+            boxShadow: '0 0 20px rgba(74, 222, 128, 0.5)',
+          }}
+        />
+
+        {/* 高亮框 3 - 操作按钮 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '22%',
+            right: '5%',
+            width: '12%',
+            height: '58%',
+            border: '3px solid #fbbf24',
+            borderRadius: 8,
+            opacity: highlight3Opacity,
+            boxShadow: '0 0 20px rgba(251, 191, 36, 0.5)',
+          }}
+        />
+      </div>
+
+      {/* 底部装饰线 */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          left: '10%',
+          right: '10%',
+          height: 4,
+          background: 'linear-gradient(90deg, #0083b0 0%, #00b4db 50%, #0083b0 100%)',
+          borderRadius: 2,
+          opacity: interpolate(frame, [280, 300], [0, 0.3], { extrapolateRight: 'clamp' }),
+        }}
+      />
     </AbsoluteFill>
   );
 };

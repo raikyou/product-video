@@ -55,60 +55,7 @@ public/                      # 静态资源目录
     └── images/
 ```
 
-### 第 3 步: 处理素材需求
-
-根据提示词中的素材需求,采取对应策略:
-
-#### 策略 A: Figma 素材可用
-```tsx
-import { Img, staticFile } from 'remotion';
-
-// 提示用户导出 Figma 设计稿并放入 public/assets/images/
-<Img src={staticFile('assets/images/screenshot.png')} />
-```
-
-#### 策略 B: 使用网络资源
-```tsx
-import { Img } from 'remotion';
-import { FaVideo, FaUsers } from 'react-icons/fa';
-
-// Unsplash API
-<Img src="https://source.unsplash.com/1920x1080/?office,meeting" />
-
-// React Icons (需先安装: npm install react-icons)
-<FaVideo size={80} color="#4A90E2" />
-```
-
-#### 策略 C: 代码生成素材
-```tsx
-// SVG 图形
-const CheckIcon: React.FC = () => (
-  <svg width="100" height="100" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="45" fill="#4CAF50" />
-    <path d="M30 50 L45 65 L70 35" stroke="white" strokeWidth="4" fill="none" />
-  </svg>
-);
-
-// UI Mockup 组件
-const MockupCard: React.FC<{ title: string; description: string }> = ({ title, description }) => (
-  <div style={{
-    width: 400,
-    padding: 30,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-  }}>
-    <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16 }}>
-      {title}
-    </div>
-    <div style={{ color: '#666', lineHeight: 1.6 }}>
-      {description}
-    </div>
-  </div>
-);
-```
-
-### 第 4 步: 编写场景组件
+### 第 3 步: 编写场景组件
 
 为每个场景创建独立的 React 组件,**严格遵循 Remotion 规则**:
 
@@ -184,7 +131,7 @@ const opacity = interpolate(frame, [0, 30], [0, 1], {
 });
 ```
 
-### 第 5 步: 实现动画效果
+### 第 4 步: 实现动画效果
 
 #### 1. interpolate() 动画(线性/缓动)
 
@@ -334,7 +281,7 @@ const charsToShow = Math.floor(
 <div>{text.slice(0, charsToShow)}</div>
 ```
 
-### 第 6 步: 组织场景序列
+### 第 5 步: 组织场景序列
 
 #### 方案 A: 使用 Sequence (无转场)
 
@@ -445,7 +392,7 @@ export const MainComposition: React.FC = () => {
 - `linearTiming({ durationInFrames: 30 })` - 线性,指定帧数
 - `springTiming({ config: { damping: 200 } })` - 弹性,自动计算时长
 
-### 第 7 步: 更新 Root.tsx
+### 第 6 步: 更新 Root.tsx
 
 ```tsx
 import { Composition } from 'remotion';
@@ -468,7 +415,7 @@ export const RemotionRoot: React.FC = () => {
 };
 ```
 
-### 第 8 步: 处理媒体元素
+### 第 7 步: 处理媒体元素
 
 #### 视频
 
@@ -529,7 +476,7 @@ import { Gif } from '@remotion/gif';
 />
 ```
 
-### 第 9 步: 字体处理
+### 第 8 步: 字体处理
 
 #### 使用 Google Fonts
 
@@ -561,7 +508,7 @@ const { fontFamily } = loadFont();
 </div>
 ```
 
-### 第 10 步: 安装必要的依赖
+### 第 9 步: 安装必要的依赖
 
 根据使用的功能,提供安装命令:
 
